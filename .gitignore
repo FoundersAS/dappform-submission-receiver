@@ -59,3 +59,7 @@ typings/
 
 # next.js build output
 .next
+
+.vscode
+dappform-submission-receiver.code-workspace
+development.json
