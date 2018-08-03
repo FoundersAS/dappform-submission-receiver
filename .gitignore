@@ -63,3 +63,4 @@ typings/
 .vscode
 dappform-submission-receiver.code-workspace
 development.json
+test-publish.js
