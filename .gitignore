@@ -61,6 +61,5 @@ typings/
 .next
 
 .vscode
-dappform-submission-receiver.code-workspace
 development.json
-test-publish.js
+dappform-tasks-submissions.code-workspace
