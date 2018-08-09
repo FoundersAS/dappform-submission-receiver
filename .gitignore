@@ -60,6 +60,7 @@ typings/
 # next.js build output
 .next
 
+.idea
 .vscode
 development.json
 dappform-tasks-submissions.code-workspace
