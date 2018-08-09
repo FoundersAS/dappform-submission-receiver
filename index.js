@@ -45,15 +45,14 @@ async function simpleWebhook(url, submission) {
         const res = await requestPromise.post(url, {
             json: submission
         });
-        console.log("Did sent webhook. Status: ", res.statusCode);
+        console.log("Did call webhook. Status: ", res.statusCode);
     }
     catch (e) {
-        console.error("Failed sending webhook:");
-        console.error(e.message);
+        console.error("Failed sending webhook: " + e.message);
     }
 }
 module.exports = wt.fromExpress(app);
-app.listen(3000, () => {
-    simpleWebhook("http://localhost:3000", { "data": {} });
-});
+// app.listen(3000, ()=> {
+//   simpleWebhook("http://localhost:3000",{"data": {}})
+// })
 //# sourceMappingURL=index.js.map
