@@ -3,7 +3,7 @@ import * as cors from 'cors'
 import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
 import { getFile } from 'dappform-forms-api/dist/lib/write'
-import * as requestPromise from 'request-promise-native'
+import request = require('request')
 
 const wt = require('webtask-tools')
 
@@ -49,15 +49,16 @@ app.post('/', (req: any, res) => {
 })
 
 async function simpleWebhook (url:string, submission:Object) {
-  try {
-    const res = await requestPromise.post(url,{
-      json: submission
-    })
-    console.log("Did call webhook. Status: ", res.statusCode)
-  }
-  catch (e) {
-    console.error("Failed sending webhook: "+e.message)
-  }
+  request(url,{
+    json: submission
+  }, (error, response, body) => {
+    if (error || response.statusCode > 299) {
+      console.error("Failed sending webhook: ",error)
+    }
+    else {
+      console.log("Did call webhook. Status: ", response.statusCode)
+    }
+  })
 }
 
 module.exports = wt.fromExpress(app)

@@ -5,7 +5,7 @@ const cors = require("cors");
 const dappform_forms_api_1 = require("dappform-forms-api");
 const express = require("express");
 const write_1 = require("dappform-forms-api/dist/lib/write");
-const requestPromise = require("request-promise-native");
+const request = require("request");
 const wt = require('webtask-tools');
 const loadBlockstack = require('blockstack-anywhere');
 const blockstack = require('blockstack');
@@ -41,15 +41,16 @@ app.post('/', (req, res) => {
     }
 });
 async function simpleWebhook(url, submission) {
-    try {
-        const res = await requestPromise.post(url, {
-            json: submission
-        });
-        console.log("Did call webhook. Status: ", res.statusCode);
-    }
-    catch (e) {
-        console.error("Failed sending webhook: " + e.message);
-    }
+    request(url, {
+        json: submission
+    }, (error, response, body) => {
+        if (error || response.statusCode > 299) {
+            console.error("Failed sending webhook: ", error);
+        }
+        else {
+            console.log("Did call webhook. Status: ", response.statusCode);
+        }
+    });
 }
 module.exports = wt.fromExpress(app);
 // app.listen(3000, ()=> {
