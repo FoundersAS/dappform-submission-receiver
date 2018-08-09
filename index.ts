@@ -2,6 +2,8 @@ import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
+import { getFile } from 'dappform-forms-api/dist/lib/write'
+import * as requestPromise from 'request-promise-native'
 
 const wt = require('webtask-tools')
 
@@ -17,7 +19,13 @@ function initBlockstack(context: any) {
 }
 
 async function handleSubmission(publicKey: string, encryptedData: string) {
-  return await newFormSubmission(JSON.parse(blockstack.decryptContent(encryptedData, { privateKey })) as Submission)
+  const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey })) as Submission
+  await newFormSubmission(submission)
+
+  const settings:any = await getFile('settings.json')
+  if (settings && settings.webhookUrl) {
+    await simpleWebhook( settings.webhookUrl, submission)
+  }
 }
 
 const app = express()
@@ -33,12 +41,26 @@ app.post('/', (req: any, res) => {
     const key = req.body.key
     const encryptedDataString = JSON.stringify(req.body.data)
 
-    handleSubmission(key, encryptedDataString).then((d) => {
-      return res.send(d)
-    })
+    handleSubmission(key, encryptedDataString)
+      .then(() => res.end())
   } else {
     res.status(500).send('no data submitted')
   }
 })
 
+async function simpleWebhook (url:string, submission:Object) {
+  try {
+    const res = await requestPromise.post(url,{
+      json: submission
+    })
+    console.log("Did call webhook. Status: ", res.statusCode)
+  }
+  catch (e) {
+    console.error("Failed sending webhook: "+e.message)
+  }
+}
+
 module.exports = wt.fromExpress(app)
+// app.listen(3000, ()=> {
+//   simpleWebhook("http://localhost:3000",{"data": {}})
+// })
