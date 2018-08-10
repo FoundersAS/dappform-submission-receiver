@@ -9,18 +9,18 @@ const request = require("request");
 const wt = require('webtask-tools');
 const loadBlockstack = require('blockstack-anywhere');
 const blockstack = require('blockstack');
-console.assert(process.env.BLOCKSTACK_APP_PRIVATE_KEY, "missing process.env.BLOCKSTACK_APP_PRIVATE_KEY");
-const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY;
 function initBlockstack(context) {
     console.assert(context.secrets.BLOCKSTACK, "missing BLOCKSTACK");
     console.assert(context.secrets.BLOCKSTACK_GAIA_HUB_CONFIG, "missing BLOCKSTACK_GAIA_HUB_CONFIG");
     console.assert(context.secrets.BLOCKSTACK_TRANSIT_PRIVATE_KEY, "missing BLOCKSTACK_TRANSIT_PRIVATE_KEY");
+    console.assert(context.secrets.BLOCKSTACK_APP_PRIVATE_KEY, "missing BLOCKSTACK_APP_PRIVATE_KEY");
+    process.env.BLOCKSTACK_APP_PRIVATE_KEY = context.secrets.BLOCKSTACK_APP_PRIVATE_KEY;
     process.env.BLOCKSTACK = context.secrets.BLOCKSTACK;
     process.env.BLOCKSTACK_GAIA_HUB_CONFIG = context.secrets.BLOCKSTACK_GAIA_HUB_CONFIG;
     process.env.BLOCKSTACK_TRANSIT_PRIVATE_KEY = context.secrets.BLOCKSTACK_TRANSIT_PRIVATE_KEY;
     loadBlockstack();
 }
-async function handleSubmission(publicKey, encryptedData) {
+async function handleSubmission(publicKey, encryptedData, privateKey) {
     const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey }));
     await dappform_forms_api_1.newFormSubmission(submission);
     const settings = await write_1.getFile('settings.json');
@@ -37,7 +37,9 @@ app.post('/', (req, res) => {
         initBlockstack(req.webtaskContext);
         const key = req.body.key;
         const encryptedDataString = JSON.stringify(req.body.data);
-        handleSubmission(key, encryptedDataString)
+        const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY;
+        console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env");
+        handleSubmission(key, encryptedDataString, privateKey)
             .then(() => res.end());
     }
     else {
