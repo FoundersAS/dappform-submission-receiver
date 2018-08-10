@@ -23,7 +23,7 @@ function initBlockstack(context: any) {
   loadBlockstack()
 }
 
-async function handleSubmission(publicKey: string, encryptedData: string, privateKey:string) {
+async function handleSubmission(encryptedData: string, privateKey:string) {
 
   const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey })) as Submission
   await newFormSubmission(submission)
@@ -40,18 +40,48 @@ app.use(cors())
 app.use(bodyParser.json())
 
 // Post to a bench must provide public key + data blob
-app.post('/', (req: any, res) => {
+app.post('/', async (req: any, res) => {
   if (typeof req.body === 'object' && req.body.data && req.body.key) {
     initBlockstack(req.webtaskContext)
 
-    const key = req.body.key
-    const encryptedDataString = JSON.stringify(req.body.data)
-    const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY
-    console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env")
-    handleSubmission(key, encryptedDataString, privateKey)
-      .then(() => res.end())
-  } else {
-    res.status(500).send('no data submitted')
+    const encryptedData:Object = req.body.data
+    console.log("cipher text")
+    console.log(encryptedData)
+    if (!encryptedData) {
+      return res.status(400).send('missing .data')
+    }
+
+    let decrypted:string
+    try {
+      const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY
+      console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env")
+      decrypted = blockstack.decryptContent(encryptedData, { privateKey })
+    }
+    catch (e) {
+      console.error(e)
+      return res.status(500).send("decryption failed")
+    }
+
+    let json:Object
+    try {
+      json = JSON.parse(decrypted)
+    }
+    catch (e) {
+      console.error(e)
+      return res.sendStatus(500)
+    }
+
+    const submission = json as Submission
+    await newFormSubmission(submission)
+
+    const settings:any = await getFile('settings.json')
+    if (settings && settings.webhookUrl) {
+      await simpleWebhook( settings.webhookUrl, submission)
+    }
+    res.sendStatus(202)
+  }
+  else {
+    res.status(400).send('no data submitted')
   }
 })
 

@@ -20,7 +20,7 @@ function initBlockstack(context) {
     process.env.BLOCKSTACK_TRANSIT_PRIVATE_KEY = context.secrets.BLOCKSTACK_TRANSIT_PRIVATE_KEY;
     loadBlockstack();
 }
-async function handleSubmission(publicKey, encryptedData, privateKey) {
+async function handleSubmission(encryptedData, privateKey) {
     const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey }));
     await dappform_forms_api_1.newFormSubmission(submission);
     const settings = await write_1.getFile('settings.json');
@@ -32,18 +32,43 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 // Post to a bench must provide public key + data blob
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
     if (typeof req.body === 'object' && req.body.data && req.body.key) {
         initBlockstack(req.webtaskContext);
-        const key = req.body.key;
-        const encryptedDataString = JSON.stringify(req.body.data);
-        const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY;
-        console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env");
-        handleSubmission(key, encryptedDataString, privateKey)
-            .then(() => res.end());
+        const encryptedData = req.body.data;
+        console.log("cipher text");
+        console.log(encryptedData);
+        if (!encryptedData) {
+            return res.status(400).send('missing .data');
+        }
+        let decrypted;
+        try {
+            const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY;
+            console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env");
+            decrypted = blockstack.decryptContent(encryptedData, { privateKey });
+        }
+        catch (e) {
+            console.error(e);
+            return res.status(500).send("decryption failed");
+        }
+        let json;
+        try {
+            json = JSON.parse(decrypted);
+        }
+        catch (e) {
+            console.error(e);
+            return res.sendStatus(500);
+        }
+        const submission = json;
+        await dappform_forms_api_1.newFormSubmission(submission);
+        const settings = await write_1.getFile('settings.json');
+        if (settings && settings.webhookUrl) {
+            await simpleWebhook(settings.webhookUrl, submission);
+        }
+        res.sendStatus(202);
     }
     else {
-        res.status(500).send('no data submitted');
+        res.status(400).send('no data submitted');
     }
 });
 async function simpleWebhook(url, submission) {
