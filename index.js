@@ -38,14 +38,14 @@ app.post('/', async (req, res) => {
         const encryptedObject = req.body.data;
         console.log("cipher text");
         console.log(encryptedObject);
-        if (!encryptedObject) {
-            return res.status(400).send('missing .data');
+        if (!encryptedObject || !encryptedObject.cipherText) {
+            return res.status(400).send('missing data');
         }
         let jsonSubmission;
         try {
             const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY;
             console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env");
-            jsonSubmission = blockstack.decryptContent(encryptedObject, { privateKey });
+            jsonSubmission = blockstack.decryptContent(encryptedObject.cipherText, { privateKey });
         }
         catch (e) {
             console.error(e);

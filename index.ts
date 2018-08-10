@@ -44,18 +44,18 @@ app.post('/', async (req: any, res) => {
   if (typeof req.body === 'object' && req.body.data && req.body.key) {
     initBlockstack(req.webtaskContext)
 
-    const encryptedObject:Object = req.body.data
+    const encryptedObject:any = req.body.data
     console.log("cipher text")
     console.log(encryptedObject)
-    if (!encryptedObject) {
-      return res.status(400).send('missing .data')
+    if (!encryptedObject || !encryptedObject.cipherText) {
+      return res.status(400).send('missing data')
     }
 
     let jsonSubmission:string
     try {
       const privateKey = process.env.BLOCKSTACK_APP_PRIVATE_KEY
       console.assert(privateKey, "Should BLOCKSTACK_APP_PRIVATE_KEY private key in process.env")
-      jsonSubmission = blockstack.decryptContent(encryptedObject, { privateKey })
+      jsonSubmission = blockstack.decryptContent(encryptedObject.cipherText, { privateKey })
     }
     catch (e) {
       console.error(e)
