@@ -41,7 +41,7 @@ app.use(bodyParser.json())
 
 // Post to a bench must provide public key + data blob
 app.post('/', async (req: any, res) => {
-  if (typeof req.body === 'object' && req.body.data && req.body.key) {
+  if (typeof req.body === 'object' && req.body.data) {
     initBlockstack(req.webtaskContext)
 
     const encryptedObject:any = req.body.data
