@@ -23,17 +23,6 @@ function initBlockstack(context: any) {
   loadBlockstack()
 }
 
-async function handleSubmission(encryptedData: string, privateKey:string) {
-
-  const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey })) as Submission
-  await newFormSubmission(submission)
-
-  const settings:any = await getFile('settings.json')
-  if (settings && settings.webhookUrl) {
-    await simpleWebhook( settings.webhookUrl, submission)
-  }
-}
-
 const app = express()
 
 app.use(cors())

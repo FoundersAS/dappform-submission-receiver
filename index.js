@@ -20,14 +20,6 @@ function initBlockstack(context) {
     process.env.BLOCKSTACK_TRANSIT_PRIVATE_KEY = context.secrets.BLOCKSTACK_TRANSIT_PRIVATE_KEY;
     loadBlockstack();
 }
-async function handleSubmission(encryptedData, privateKey) {
-    const submission = JSON.parse(blockstack.decryptContent(encryptedData, { privateKey }));
-    await dappform_forms_api_1.newFormSubmission(submission);
-    const settings = await write_1.getFile('settings.json');
-    if (settings && settings.webhookUrl) {
-        await simpleWebhook(settings.webhookUrl, submission);
-    }
-}
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
