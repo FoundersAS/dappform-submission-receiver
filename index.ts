@@ -4,8 +4,10 @@ import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
 import { getFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
+import { join } from 'path'
 
 const wt = require('webtask-tools')
+const packageJson = require(join(__dirname,'package.json'))
 
 const loadBlockstack = require('blockstack-anywhere')
 const blockstack = require('blockstack')
@@ -29,6 +31,10 @@ app.use(cors())
 app.use(bodyParser.json())
 
 // Post to a bench must provide public key + data blob
+app.get('/package.json', (req, res) => {
+  res.json(packageJson)
+})
+
 app.post('/', async (req: any, res) => {
   console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body)
   if (typeof req.body === 'object' && req.body.data) {
