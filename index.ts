@@ -4,8 +4,7 @@ import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
 import { getFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
-import { join } from 'path'
-import { readFileSync } from "fs"
+
 
 const wt = require('webtask-tools')
 
@@ -29,13 +28,6 @@ const app = express()
 
 app.use(cors())
 app.use(bodyParser.json())
-
-// Post to a bench must provide public key + data blob
-app.get('/package.json', (req, res) => {
-  const packageJson = readFileSync(join(__dirname,'package.json'))
-  const obj = JSON.parse(packageJson.toString())
-  res.json(obj)
-})
 
 app.post('/', async (req: any, res) => {
   console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body)

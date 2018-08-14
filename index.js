@@ -6,8 +6,6 @@ const dappform_forms_api_1 = require("dappform-forms-api");
 const express = require("express");
 const write_1 = require("dappform-forms-api/dist/lib/write");
 const request = require("request");
-const path_1 = require("path");
-const fs_1 = require("fs");
 const wt = require('webtask-tools');
 const loadBlockstack = require('blockstack-anywhere');
 const blockstack = require('blockstack');
@@ -25,12 +23,6 @@ function initBlockstack(context) {
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-// Post to a bench must provide public key + data blob
-app.get('/package.json', (req, res) => {
-    const packageJson = fs_1.readFileSync(path_1.join(__dirname, 'package.json'));
-    const obj = JSON.parse(packageJson.toString());
-    res.json(obj);
-});
 app.post('/', async (req, res) => {
     console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body);
     if (typeof req.body === 'object' && req.body.data) {
