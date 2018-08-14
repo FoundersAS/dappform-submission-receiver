@@ -7,8 +7,8 @@ const express = require("express");
 const write_1 = require("dappform-forms-api/dist/lib/write");
 const request = require("request");
 const path_1 = require("path");
+const fs_1 = require("fs");
 const wt = require('webtask-tools');
-const packageJson = require(path_1.join(__dirname, 'package.json'));
 const loadBlockstack = require('blockstack-anywhere');
 const blockstack = require('blockstack');
 function initBlockstack(context) {
@@ -27,7 +27,9 @@ app.use(cors());
 app.use(bodyParser.json());
 // Post to a bench must provide public key + data blob
 app.get('/package.json', (req, res) => {
-    res.json(packageJson);
+    const packageJson = fs_1.readFileSync(path_1.join(__dirname, 'package.json'));
+    const obj = JSON.parse(packageJson.toString());
+    res.json(obj);
 });
 app.post('/', async (req, res) => {
     console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body);
@@ -82,6 +84,7 @@ async function simpleWebhook(url, submission) {
 }
 module.exports = wt.fromExpress(app);
 // app.listen(3000, ()=> {
-//   simpleWebhook("http://localhost:3000",{"data": {}})
+// simpleWebhook("http://localhost:3000",{"data": {}})
+// console.debug('listening on 3000')
 // })
 //# sourceMappingURL=index.js.map

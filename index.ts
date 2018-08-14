@@ -5,9 +5,9 @@ import * as express from 'express'
 import { getFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
 import { join } from 'path'
+import { readFileSync } from "fs"
 
 const wt = require('webtask-tools')
-const packageJson = require(join(__dirname,'package.json'))
 
 const loadBlockstack = require('blockstack-anywhere')
 const blockstack = require('blockstack')
@@ -32,7 +32,9 @@ app.use(bodyParser.json())
 
 // Post to a bench must provide public key + data blob
 app.get('/package.json', (req, res) => {
-  res.json(packageJson)
+  const packageJson = readFileSync(join(__dirname,'package.json'))
+  const obj = JSON.parse(packageJson.toString())
+  res.json(obj)
 })
 
 app.post('/', async (req: any, res) => {
@@ -95,5 +97,6 @@ async function simpleWebhook (url:string, submission:Object) {
 
 module.exports = wt.fromExpress(app)
 // app.listen(3000, ()=> {
-//   simpleWebhook("http://localhost:3000",{"data": {}})
+  // simpleWebhook("http://localhost:3000",{"data": {}})
+  // console.debug('listening on 3000')
 // })
