@@ -23,6 +23,7 @@ function initBlockstack(context) {
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.get('/version', (req, res) => res.send(req.webtaskContext.secrets.version || "0.0.0"));
 app.post('/', async (req, res) => {
     console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body);
     if (typeof req.body === 'object' && req.body.data) {
