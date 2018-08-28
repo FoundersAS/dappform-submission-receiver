@@ -2,8 +2,9 @@ import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
-import { getFile } from 'dappform-forms-api/dist/lib/write'
+import { getFile, putFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
+import { Request, Response } from 'express'
 
 
 const wt = require('webtask-tools')
@@ -32,7 +33,7 @@ app.use(bodyParser.json())
 app.get('/version', (req:any, res) => res.send(req.webtaskContext.secrets.version || "0.0.0"))
 
 app.post('/', async (req: any, res) => {
-  console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body)
+  console.log(typeof req.body === 'object', req.body ? req.body.data : req.body)
   if (typeof req.body === 'object' && req.body.data) {
     initBlockstack(req.webtaskContext)
 
@@ -74,6 +75,37 @@ app.post('/', async (req: any, res) => {
   else {
     res.status(400).send('no data submitted')
   }
+})
+
+interface WtReq extends Request {
+  webtaskContext: Object
+}
+
+app.get('/view/:formId', async (req: WtReq, res:Response) => {
+  const formId = req.params.formId
+  console.assert(formId, "Didn't find form id")
+  initBlockstack(req.webtaskContext)
+
+  const statsFile = `views/${formId}.json`
+  type FormStats = {
+    numViews: number
+  }
+  let viewsObj:FormStats = await getFile(statsFile) as any
+
+  if (!viewsObj) {
+    viewsObj = <FormStats>{
+      numViews: 0,
+    }
+  }
+  if (typeof viewsObj.numViews !== 'number') {
+    viewsObj.numViews = 0
+  }
+
+  viewsObj.numViews += 1
+  await putFile(statsFile, viewsObj, false)
+  console.log("wrote "+statsFile, viewsObj)
+
+  res.sendStatus(202)
 })
 
 async function simpleWebhook (url:string, submission:Object) {
