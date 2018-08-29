@@ -2,7 +2,6 @@ import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 import { newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
-import { Request } from 'express'
 import { getFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
 
@@ -75,10 +74,6 @@ app.post('/', async (req: any, res) => {
     res.status(400).send('no data submitted')
   }
 })
-
-interface WtReq extends Request {
-  webtaskContext: Object,
-}
 
 async function simpleWebhook (url:string, submission:Object) {
   request(url,{
