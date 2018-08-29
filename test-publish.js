@@ -20,6 +20,7 @@ request({
   json: {
     code: fs.readFileSync('index.js').toString(),
     secrets: {
+      version: p.version,
       BLOCKSTACK: process.env.BLOCKSTACK,
       BLOCKSTACK_GAIA_HUB_CONFIG: process.env.BLOCKSTACK_GAIA_HUB_CONFIG,
       BLOCKSTACK_TRANSIT_PRIVATE_KEY: process.env.BLOCKSTACK_TRANSIT_PRIVATE_KEY,
