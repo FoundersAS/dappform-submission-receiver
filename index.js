@@ -25,7 +25,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.get('/version', (req, res) => res.send(req.webtaskContext.secrets.version || "0.0.0"));
 app.post('/', async (req, res) => {
-    console.debug(typeof req.body === 'object', req.body ? req.body.data : req.body);
+    console.log(typeof req.body === 'object', req.body ? req.body.data : req.body);
     if (typeof req.body === 'object' && req.body.data) {
         initBlockstack(req.webtaskContext);
         const encryptedString = req.body.data;
@@ -80,4 +80,3 @@ module.exports = wt.fromExpress(app);
 // simpleWebhook("http://localhost:3000",{"data": {}})
 // console.debug('listening on 3000')
 // })
-//# sourceMappingURL=index.js.map
