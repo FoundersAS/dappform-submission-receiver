@@ -1,8 +1,8 @@
 import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
-import { newFormSubmission, Submission } from 'dappform-forms-api'
+import { Answer, newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
-import { getFile } from 'dappform-forms-api/dist/lib/write'
+import { getFile, putFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
 
 const wt = require('webtask-tools')
@@ -36,8 +36,8 @@ app.post('/', async (req: any, res) => {
     initBlockstack(req.webtaskContext)
 
     const encryptedString:string = req.body.data
-    console.log("cipher text")
-    console.log(encryptedString)
+    // console.log("cipher text")
+    // console.log(encryptedString)
     if (!encryptedString || !encryptedString) {
       return res.status(400).send('missing data')
     }
@@ -62,12 +62,48 @@ app.post('/', async (req: any, res) => {
       return res.sendStatus(500)
     }
 
+    console.log("Decrypted submission:")
+    console.log(JSON.stringify(submission.answers[0],null,2))
+
+    const dataUrlRegex = /^data:.+\/(.+);base64,(.*)$/
+
+    // handle file uploads
+    const fileBuffers = submission.answers
+      .filter(a => dataUrlRegex.test(a.value))
+      .map(a => {
+        const [matches, ext, data] = a.value.match(dataUrlRegex)
+        const buf = new Buffer(data, 'base64');
+        a.value = "path ..."
+        return <[string, Buffer, Answer]>[`files/${submission.formUuid}/${submission.uuid}-${a.questionUuid}.${ext}`, buf, a]
+      })
+      .filter(val => val)
+
+    const filesPromises = fileBuffers
+      .map(([path, buf, answer]) => [blockstack.putFile(path, buf), answer])
+      .map(([promise, answer]) => promise.then((path:string) => {
+          answer.value = path
+          return path
+        }))
+
+    const filesPromisesRes = await Promise.all(filesPromises)
+    if (filesPromisesRes.length > 0) {
+      console.log("Wrote ", filesPromisesRes)
+    }
+
     await newFormSubmission(submission)
 
-    const settings:any = await getFile('settings.json')
-    if (settings && settings.webhookUrl) {
-      await simpleWebhook( settings.webhookUrl, submission)
+    console.log("Wrote ",JSON.stringify(submission, null, 2))
+
+    try {
+      const settings:any = await getFile('settings.json')
+      if (settings && settings.webhookUrl) {
+        simpleWebhook( settings.webhookUrl, submission)
+      }
     }
+    catch (e) {
+      console.error("Failed web hook")
+    }
+
     res.sendStatus(202)
   }
   else {

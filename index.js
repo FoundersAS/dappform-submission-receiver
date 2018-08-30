@@ -29,8 +29,8 @@ app.post('/', async (req, res) => {
     if (typeof req.body === 'object' && req.body.data) {
         initBlockstack(req.webtaskContext);
         const encryptedString = req.body.data;
-        console.log("cipher text");
-        console.log(encryptedString);
+        // console.log("cipher text")
+        // console.log(encryptedString)
         if (!encryptedString || !encryptedString) {
             return res.status(400).send('missing data');
         }
@@ -52,10 +52,39 @@ app.post('/', async (req, res) => {
             console.error(e);
             return res.sendStatus(500);
         }
+        console.log("Decrypted submission:");
+        console.log(JSON.stringify(submission.answers[0], null, 2));
+        const dataUrlRegex = /^data:.+\/(.+);base64,(.*)$/;
+        // handle file uploads
+        const fileBuffers = submission.answers
+            .filter(a => dataUrlRegex.test(a.value))
+            .map(a => {
+            const [matches, ext, data] = a.value.match(dataUrlRegex);
+            const buf = new Buffer(data, 'base64');
+            a.value = "path ...";
+            return [`files/${submission.formUuid}/${submission.uuid}-${a.questionUuid}.${ext}`, buf, a];
+        })
+            .filter(val => val);
+        const filesPromises = fileBuffers
+            .map(([path, buf, answer]) => [blockstack.putFile(path, buf), answer])
+            .map(([promise, answer]) => promise.then((path) => {
+            answer.value = path;
+            return path;
+        }));
+        const filesPromisesRes = await Promise.all(filesPromises);
+        if (filesPromisesRes.length > 0) {
+            console.log("Wrote ", filesPromisesRes);
+        }
         await dappform_forms_api_1.newFormSubmission(submission);
-        const settings = await write_1.getFile('settings.json');
-        if (settings && settings.webhookUrl) {
-            await simpleWebhook(settings.webhookUrl, submission);
+        console.log("Wrote ", JSON.stringify(submission, null, 2));
+        try {
+            const settings = await write_1.getFile('settings.json');
+            if (settings && settings.webhookUrl) {
+                simpleWebhook(settings.webhookUrl, submission);
+            }
+        }
+        catch (e) {
+            console.error("Failed web hook");
         }
         res.sendStatus(202);
     }
