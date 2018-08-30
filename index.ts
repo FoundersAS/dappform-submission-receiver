@@ -2,7 +2,7 @@ import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 import { Answer, newFormSubmission, Submission } from 'dappform-forms-api'
 import * as express from 'express'
-import { getFile, putFile } from 'dappform-forms-api/dist/lib/write'
+import { getFile } from 'dappform-forms-api/dist/lib/write'
 import request = require('request')
 
 const wt = require('webtask-tools')
