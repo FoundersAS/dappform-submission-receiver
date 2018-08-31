@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const dappform_forms_api_1 = require("dappform-forms-api");
 const express = require("express");
-const write_1 = require("dappform-forms-api/dist/lib/write");
 const request = require("request");
 const wt = require('webtask-tools');
 const loadBlockstack = require('blockstack-anywhere');
@@ -76,7 +75,7 @@ app.post('/', async (req, res) => {
         await dappform_forms_api_1.newFormSubmission(submission);
         console.log("Wrote ", JSON.stringify(submission, null, 2));
         try {
-            const settings = await write_1.getFile('settings.json');
+            const settings = await dappform_forms_api_1.getFile('settings.json');
             if (settings && settings.webhookUrl) {
                 simpleWebhook(settings.webhookUrl, submission);
             }
