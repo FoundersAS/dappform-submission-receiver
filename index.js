@@ -61,10 +61,8 @@ app.post('/', async (req, res) => {
             .map(a => {
             const [matches, ext, data] = a.value.match(dataUrlRegex);
             const buf = new Buffer(data, 'base64');
-            a.value = "path ...";
             return [`files/${submission.formUuid}/${submission.uuid}-${a.questionUuid}.${ext}`, buf, a];
-        })
-            .filter(val => val);
+        });
         const filesPromises = fileBuffers
             .map(([path, buf, answer]) => [blockstack.putFile(path, buf), answer])
             .map(([promise, answer]) => promise.then((path) => {
