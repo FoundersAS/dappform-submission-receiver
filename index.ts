@@ -25,7 +25,7 @@ function initBlockstack(context: any) {
 const app = express()
 
 app.use(cors())
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '5mb'}))
 
 app.get('/version', (req:any, res) => res.send(req.webtaskContext.secrets.version || "0.0.0"))
 
